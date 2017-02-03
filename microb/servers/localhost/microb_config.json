@@ -1,0 +1,13 @@
+{
+	"centrifugo_secret_key":"560489a2-03af-419b-876c-57d02528269a",
+	"centrifugo_host":"localhost",
+	"centrifugo_port":"8001",
+	"db_type": "rethinkdb",
+	"db_host":"192.168.1.15",
+	"db_port":"28015",
+	"database":"intranet",
+	"table":"pages",
+	"db_user":"admin",
+	"db_password":"rdbadm",
+	"http_port":":8080"
+}
