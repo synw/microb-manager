@@ -14,7 +14,7 @@ cd sites
 mkdir templates
   ```
 
-Install and configure [Django R](https://github.com/synw/django-R#install)
+[Install and configure Django R](https://github.com/synw/django-R#install)
 
   ```bash
 git clone https://github.com/synw/microb-manager.git
@@ -70,7 +70,7 @@ python manage.py runserver
   
 Go to `/admin/` and add a site. Then you can create pages. Go to `/r/` to view the page data from Rethinkdb.
 
-Configure Microb:
+[Configure Microb](https://github.com/synw/microb#configuration):
 
   ```bash
 mv microb/servers .
