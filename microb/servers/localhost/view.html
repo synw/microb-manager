@@ -32,7 +32,7 @@
 		return
 	}
 	page('/', function(ctx, next) { loadPage('/x/') } );
-	{{ template "routes.html" . }}
+	{{ template "routes.js" . }}
 	page();
 	</script>
 	<div id="header">
