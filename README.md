@@ -70,5 +70,14 @@ python manage.py runserver
   
 Go to `/admin/` and add a site. Then you can create pages. Go to `/r/` to view the page data from Rethinkdb.
 
-Configure and run Microb
+Configure Microb:
+
+  ```bash
+mv microb/servers .
+cd servers/localhost
+vim microb_config.json
+  ```
+
+Run the server: `./microb`
+
 
