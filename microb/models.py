@@ -30,6 +30,21 @@ class Site(models.Model):
     
     def __unicode__(self):
         return unicode(self.title)
+    
+
+class SiteTemplate(models.Model):
+    content = models.TextField(_(u'Content'), blank=True)
+    site = models.ForeignKey(Site, verbose_name=_(u"Site"))
+    edited = models.DateTimeField(editable=False, null=True, auto_now=True, verbose_name=_(u'Edited'))
+    created = models.DateTimeField(editable=False, null=True, auto_now_add=True, verbose_name=_(u'Created'))
+    editor = models.ForeignKey(USER_MODEL, editable = False, related_name='+', null=True, on_delete=models.SET_NULL, verbose_name=_(u'Edited by'))   
+    
+    class Meta:
+        verbose_name = _(u'Site template')
+        verbose_name_plural = _(u'Site templates')
+
+    def __unicode__(self):
+        return unicode(self.site.title)
 
 
 class Page(MPTTModel, Seo):
@@ -80,7 +95,9 @@ class Page(MPTTModel, Seo):
      
     def delete(self, *args, **kwargs):
         super(Page, self).delete(*args, **kwargs)
-        return
+        filters = (r.row['domain'] == self.site.domain) & (r.row['uri'] == self.url)
+        res = R.delete_filtered(DB, TABLE, filters)
+        return res
     
     def mirror(self, data):
         #print 'Exists: '+str(self.document_exists())

@@ -3,8 +3,8 @@
 from django.utils.translation import ugettext_lazy as _
 from django.contrib import admin
 from mptt.admin import MPTTModelAdmin
-from microb.models import Page, Site, Image
-from microb.forms import PageAdminForm
+from microb.models import Page, Site, Image, SiteTemplate
+from microb.forms import PageAdminForm, SiteTemplateForm
 from microb.conf import USE_REVERSION
 
 
@@ -59,7 +59,19 @@ class PageAdmin(MPTTModelAdmin, admin_class):
         obj.save()
         return
 
+"""
+@admin.register(SiteTemplate)
+class SitesTemplatesAdmin(admin.ModelAdmin):
+    date_hierarchy = 'edited'
+    save_on_top = True
+    form = SiteTemplateForm
+
+    def save_model(self, request, obj, form, change):
+        obj.editor = request.user
+        obj.save()
+        return
+"""
+
 @admin.register(Site)
 class SitesAdmin(admin.ModelAdmin):
     pass
-    
