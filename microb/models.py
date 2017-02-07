@@ -4,6 +4,7 @@ import json
 import rethinkdb as r
 from django.core import serializers
 from django.db import models
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from jsonfield import JSONField
 from mptt.models import TreeForeignKey, MPTTModel
@@ -44,6 +45,44 @@ class SiteTemplate(models.Model):
 
     def __unicode__(self):
         return unicode(self.site.title)
+    
+    def save(self, *args, **kwargs):
+        super(SiteTemplate, self).save(*args, **kwargs)
+        # save template to Microb server
+        filepath=settings.BASE_DIR+"/microb/servers/"+self.site.domain+"/templates/view.html"
+        #~ write the file
+        filex = open(filepath, "w")
+        filex.write(self.content.encode('utf-8'))
+        filex.close()
+        # send command to the Microb server to reparse the templates
+        data = {"Name": "reparse_templates", "Reason": "Template edit"}
+        R.write(DB, "commands", data)
+        return
+
+    
+class SiteCss(models.Model):
+    content = models.TextField(_(u'Content'), blank=True)
+    site = models.ForeignKey(Site, verbose_name=_(u"Site"))
+    edited = models.DateTimeField(editable=False, null=True, auto_now=True, verbose_name=_(u'Edited'))
+    created = models.DateTimeField(editable=False, null=True, auto_now_add=True, verbose_name=_(u'Created'))
+    editor = models.ForeignKey(USER_MODEL, editable = False, related_name='+', null=True, on_delete=models.SET_NULL, verbose_name=_(u'Edited by'))   
+    
+    class Meta:
+        verbose_name = _(u'Site css')
+        verbose_name_plural = _(u'Site css')
+
+    def __unicode__(self):
+        return unicode(self.site.title)
+    
+    def save(self, *args, **kwargs):
+        super(SiteCss, self).save(*args, **kwargs)
+        # save template to Microb server
+        filepath=settings.BASE_DIR+"/microb/servers/"+self.site.domain+"/static/css/screen.css"
+        #~ write the file
+        filex = open(filepath, "w")
+        filex.write(self.content.encode('utf-8'))
+        filex.close()
+        return
 
 
 class Page(MPTTModel, Seo):
@@ -113,6 +152,16 @@ class Page(MPTTModel, Seo):
         self.mirror(data)
         #print str(json.dumps(data, indent=4))
         return
+
+
+class ImageCss(models.Model):
+    image = models.ImageField(upload_to=content_file_name, null=True, blank=True)
+    page = models.ForeignKey(SiteCss, verbose_name=_(u"Css"))
+    
+    
+class ImageTemplate(models.Model):
+    image = models.ImageField(upload_to=content_file_name, null=True, blank=True)
+    page = models.ForeignKey(SiteTemplate, verbose_name=_(u"Template"))
 
 
 class Image(models.Model):

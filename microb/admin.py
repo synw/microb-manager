@@ -3,13 +3,25 @@
 from django.utils.translation import ugettext_lazy as _
 from django.contrib import admin
 from mptt.admin import MPTTModelAdmin
-from microb.models import Page, Site, Image, SiteTemplate
-from microb.forms import PageAdminForm, SiteTemplateForm
+from microb.models import Page, Site, Image, SiteTemplate, SiteCss, ImageTemplate, ImageCss
+from microb.forms import PageAdminForm, SiteTemplateForm, SiteCssForm
 from microb.conf import USE_REVERSION
 
 
 class ImageInline(admin.TabularInline):
     model = Image
+    fields = ['image']
+    extra = 0
+    
+
+class ImageTemplateInline(admin.TabularInline):
+    model = ImageTemplate
+    fields = ['image']
+    extra = 0
+
+
+class ImageCssInline(admin.TabularInline):
+    model = ImageCss
     fields = ['image']
     extra = 0
 
@@ -24,11 +36,11 @@ class PageAdmin(MPTTModelAdmin, admin_class):
     form = PageAdminForm
     date_hierarchy = 'edited'
     search_fields = ['title','url','editor__username']
-    list_display = ['url','title','published','edited','editor']
+    list_display = ['url','title', 'published','edited','editor', 'site']
     list_select_related = ['editor']
     list_display_links = ['title','url']
     list_filter = ['site', 'created','edited','published']
-    list_select_related = ['editor']
+    list_select_related = ['editor', 'site']
     mptt_level_indent = 25
     save_on_top = True
     inlines = [ImageInline]
@@ -59,18 +71,32 @@ class PageAdmin(MPTTModelAdmin, admin_class):
         obj.save()
         return
 
-"""
+
 @admin.register(SiteTemplate)
-class SitesTemplatesAdmin(admin.ModelAdmin):
+class SitesTemplatesAdmin(VersionAdmin):
     date_hierarchy = 'edited'
     save_on_top = True
     form = SiteTemplateForm
+    inlines = [ImageTemplateInline]
 
     def save_model(self, request, obj, form, change):
         obj.editor = request.user
         obj.save()
         return
-"""
+
+
+@admin.register(SiteCss)
+class SitesCssAdmin(VersionAdmin):
+    date_hierarchy = 'edited'
+    save_on_top = True
+    form = SiteCssForm
+    inlines = [ImageCssInline]
+
+    def save_model(self, request, obj, form, change):
+        obj.editor = request.user
+        obj.save()
+        return
+
 
 @admin.register(Site)
 class SitesAdmin(admin.ModelAdmin):
