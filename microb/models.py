@@ -2,7 +2,6 @@
 
 import json
 import rethinkdb as r
-from django.core.management import call_command
 from django.core import serializers
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
@@ -107,16 +106,11 @@ class Page(MPTTModel, Seo):
         else:
             res = R.write(DB, TABLE, data)
         return res
-    
-    def update_routes(self):
-        call_command('microb_routes', verbosity=0)
-        return
 
     def save(self, *args, **kwargs):
         super(Page, self).save(*args, **kwargs)
         data = self.serialize()
         self.mirror(data)
-        self.update_routes()
         #print str(json.dumps(data, indent=4))
         return
 
