@@ -9,7 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 from jsonfield import JSONField
 from mptt.models import TreeForeignKey, MPTTModel
 from djR.r_producers import R
-from microb.conf import USER_MODEL, DB, TABLE
+from microb.conf import USER_MODEL
 
 
 def content_file_name(instance, filename):
@@ -56,7 +56,7 @@ class SiteTemplate(models.Model):
         filex.close()
         # send command to the Microb server to reparse the templates
         data = {"Name": "reparse_templates", "Reason": "Template edit"}
-        R.write(DB, "commands", data)
+        R.write(self.site.domain, "commands", data)
         return
 
     
@@ -111,7 +111,7 @@ class Page(MPTTModel, Seo):
     
     def document_exists(self):
         domain = self.site.domain
-        q = r.db(DB).table(TABLE).get_all([self.url, domain], index="key").count()
+        q = r.db(self.site.domain).table("pages").get_all([self.url, domain], index="key").count()
         #existing_documents = order_documents(R.run_query(q))
         #print modelname+" | "+str(pk)+" _> "+str(existing_documents)
         existing_documents = R.run_query(q)
@@ -141,9 +141,9 @@ class Page(MPTTModel, Seo):
         #print 'Exists: '+str(self.document_exists())
         if self.document_exists() is True:
             filters = (r.row['domain'] == self.site.domain) & (r.row['uri'] == self.url)
-            res = R.update(DB, TABLE, data, filters)
+            res = R.update(self.site.domain, "pages", data, filters)
         else:
-            res = R.write(DB, TABLE, data)
+            res = R.write(self.site.domain, "pages", data)
         return res
 
     def save(self, *args, **kwargs):

@@ -56,8 +56,6 @@ Microb settings:
 
   ```python
 MICROB_CODE_MODE = True # to enable codemirror editor (otherwise it will be ckeditor)
-MICROB_DB = "microb"
-MICROB_TABLE = "pages"
   ```
 Migrate:
 
