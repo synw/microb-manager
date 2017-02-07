@@ -3,11 +3,11 @@
 	"centrifugo_host":"localhost",
 	"centrifugo_port":"8001",
 	"db_type": "rethinkdb",
-	"db_host":"192.168.1.15",
+	"db_host":"localhost",
 	"db_port":"28015",
-	"database":"intranet",
+	"database":"mydb",
 	"table":"pages",
 	"db_user":"admin",
-	"db_password":"rdbadm",
+	"db_password":"mypwd",
 	"http_port":":8080"
 }
