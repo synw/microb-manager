@@ -9,9 +9,7 @@ Install
 
   ```bash
 pip install django
-django-admin startproject sites
-cd sites
-mkdir templates
+django-admin startproject sites && cd sites
   ```
 
 [Install and configure Django R](https://github.com/synw/django-R#install)
@@ -65,8 +63,17 @@ python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver
   ```
-  
-Go to `/admin/` and add a site. Then you can create pages. Go to `/r/` to view the page data from Rethinkdb.
+
+Go to `/admin/` and add a machine and a http server. 
+Then you can create pages. Go to `/r/` to view the page data from Rethinkdb.
+
+Note: you can synchronize the local database from the main db:
+
+  ```bash
+python manage.py microb_syncdb domain_name
+  ```
+
+Replace `domain_name` by the name of the server, corresponding to the name of the Rethinkdb database you want to sync
 
 [Configure Microb](https://github.com/synw/microb#configuration):
 

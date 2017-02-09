@@ -24,17 +24,27 @@ class Seo(models.Model):
         verbose_name=_(u'SEO')
 
 
-class Site(models.Model):
-    title = models.CharField(_(u'Title'), max_length=200)
-    domain = models.CharField(_(u'Domain'), max_length=200)
+class Machine(models.Model):
+    name = models.SlugField(unique=True, verbose_name=_(u'Name'), max_length=200)
+    ip = models.GenericIPAddressField(null=True, blank=True, verbose_name=_(u'Ip adress'))
     
     def __unicode__(self):
-        return unicode(self.title)
+        return unicode(self.name)+" - "+str(self.ip)
+
+
+class HttpServer(models.Model):
+    name = models.CharField(_(u'Name'), max_length=200)
+    domain = models.CharField(_(u'Domain'), max_length=200)
+    machine = models.ForeignKey(Machine, verbose_name=_(u"Machine"))
+    port = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name=_(u"Port"))
     
+    def __unicode__(self):
+        return unicode(self.name)
+   
 
 class SiteTemplate(models.Model):
     content = models.TextField(_(u'Content'), blank=True)
-    site = models.ForeignKey(Site, verbose_name=_(u"Site"))
+    server = models.ForeignKey(HttpServer, verbose_name=_(u"Site"))
     edited = models.DateTimeField(editable=False, null=True, auto_now=True, verbose_name=_(u'Edited'))
     created = models.DateTimeField(editable=False, null=True, auto_now_add=True, verbose_name=_(u'Created'))
     editor = models.ForeignKey(USER_MODEL, editable = False, related_name='+', null=True, on_delete=models.SET_NULL, verbose_name=_(u'Edited by'))   
@@ -44,25 +54,25 @@ class SiteTemplate(models.Model):
         verbose_name_plural = _(u'Site templates')
 
     def __unicode__(self):
-        return unicode(self.site.title)
+        return unicode(self.server.title)
     
     def save(self, *args, **kwargs):
         super(SiteTemplate, self).save(*args, **kwargs)
         # save template to Microb server
-        filepath=settings.BASE_DIR+"/microb/servers/"+self.site.domain+"/templates/view.html"
+        filepath=settings.BASE_DIR+"/microb/servers/"+self.server.domain+"/templates/view.html"
         #~ write the file
         filex = open(filepath, "w")
         filex.write(self.content.encode('utf-8'))
         filex.close()
         # send command to the Microb server to reparse the templates
         data = {"Name": "reparse_templates", "Reason": "Template edit"}
-        R.write(self.site.domain, "commands", data)
+        R.write(self.server.domain, "commands", data)
         return
 
     
 class SiteCss(models.Model):
     content = models.TextField(_(u'Content'), blank=True)
-    site = models.ForeignKey(Site, verbose_name=_(u"Site"))
+    server = models.ForeignKey(HttpServer, verbose_name=_(u"Site"))
     edited = models.DateTimeField(editable=False, null=True, auto_now=True, verbose_name=_(u'Edited'))
     created = models.DateTimeField(editable=False, null=True, auto_now_add=True, verbose_name=_(u'Created'))
     editor = models.ForeignKey(USER_MODEL, editable = False, related_name='+', null=True, on_delete=models.SET_NULL, verbose_name=_(u'Edited by'))   
@@ -72,12 +82,12 @@ class SiteCss(models.Model):
         verbose_name_plural = _(u'Site css')
 
     def __unicode__(self):
-        return unicode(self.site.title)
+        return unicode(self.server.title)
     
     def save(self, *args, **kwargs):
         super(SiteCss, self).save(*args, **kwargs)
         # save template to Microb server
-        filepath=settings.BASE_DIR+"/microb/servers/"+self.site.domain+"/static/css/screen.css"
+        filepath=settings.BASE_DIR+"/microb/servers/"+self.server.domain+"/static/css/screen.css"
         #~ write the file
         filex = open(filepath, "w")
         filex.write(self.content.encode('utf-8'))
@@ -89,7 +99,7 @@ class Page(MPTTModel, Seo):
     url = models.CharField(_(u'Url'), max_length=180, db_index=True)
     title = models.CharField(_(u'Title'), max_length=200)
     content = models.TextField(_(u'Content'), blank=True)
-    site = models.ForeignKey(Site, verbose_name=_(u"Site"))
+    server = models.ForeignKey(HttpServer, verbose_name=_(u"Site"))
     parent = TreeForeignKey('self', null=True, blank=True, related_name=u'children', verbose_name=_(u'Parent page'))
     edited = models.DateTimeField(editable=False, null=True, auto_now=True, verbose_name=_(u'Edited'))
     created = models.DateTimeField(editable=False, null=True, auto_now_add=True, verbose_name=_(u'Created'))
@@ -110,8 +120,8 @@ class Page(MPTTModel, Seo):
         return unicode(self.title)
     
     def document_exists(self):
-        domain = self.site.domain
-        q = r.db(self.site.domain).table("pages").get_all([self.url, domain], index="key").count()
+        domain = self.server.domain
+        q = r.db(self.server.domain).table("pages").get_all([self.url, domain], index="key").count()
         #existing_documents = order_documents(R.run_query(q))
         #print modelname+" | "+str(pk)+" _> "+str(existing_documents)
         existing_documents = R.run_query(q)
@@ -121,7 +131,7 @@ class Page(MPTTModel, Seo):
         return json_document_exists
     
     def serialize(self):
-        domain = self.site.domain
+        domain = self.server.domain
         data = json.loads(serializers.serialize("json", [self])[1:-1])
         data["domain"] = domain
         data["uri"] = self.url
@@ -133,17 +143,17 @@ class Page(MPTTModel, Seo):
      
     def delete(self, *args, **kwargs):
         super(Page, self).delete(*args, **kwargs)
-        filters = (r.row['domain'] == self.site.domain) & (r.row['uri'] == self.url)
-        res = R.delete_filtered(DB, TABLE, filters)
+        filters = (r.row['domain'] == self.server.domain) & (r.row['uri'] == self.url)
+        res = R.delete_filtered(self.server.domain, "pages", filters)
         return res
     
     def mirror(self, data):
         #print 'Exists: '+str(self.document_exists())
         if self.document_exists() is True:
-            filters = (r.row['domain'] == self.site.domain) & (r.row['uri'] == self.url)
-            res = R.update(self.site.domain, "pages", data, filters)
+            filters = (r.row['domain'] == self.server.domain) & (r.row['uri'] == self.url)
+            res = R.update(self.server.domain, "pages", data, filters)
         else:
-            res = R.write(self.site.domain, "pages", data)
+            res = R.write(self.server.domain, "pages", data)
         return res
 
     def save(self, *args, **kwargs):

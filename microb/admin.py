@@ -3,10 +3,15 @@
 from django.utils.translation import ugettext_lazy as _
 from django.contrib import admin
 from mptt.admin import MPTTModelAdmin
-from microb.models import Page, Site, Image, SiteTemplate, SiteCss, ImageTemplate, ImageCss
+from microb.models import Machine, HttpServer, Page, Image, SiteTemplate, SiteCss, ImageTemplate, ImageCss
 from microb.forms import PageAdminForm, SiteTemplateForm, SiteCssForm
 from microb.conf import USE_REVERSION
 
+
+class HttpServerInline(admin.TabularInline):
+    model = HttpServer
+    fields = ['name', 'domain', "port"]
+    extra = 0
 
 class ImageInline(admin.TabularInline):
     model = Image
@@ -36,18 +41,18 @@ class PageAdmin(MPTTModelAdmin, admin_class):
     form = PageAdminForm
     date_hierarchy = 'edited'
     search_fields = ['title','url','editor__username']
-    list_display = ['url','title', 'published','edited','editor', 'site']
+    list_display = ['url','title', 'published','edited','editor', 'server']
     list_select_related = ['editor']
     list_display_links = ['title','url']
-    list_filter = ['site', 'created','edited','published']
-    list_select_related = ['editor', 'site']
+    list_filter = ['server', 'created','edited','published']
+    list_select_related = ['editor', 'server']
     mptt_level_indent = 25
     save_on_top = True
     inlines = [ImageInline]
     
     def get_fieldsets(self, request, obj=None):
         super(PageAdmin, self).get_fieldsets(request, obj)
-        base_fields = (('url', 'title'),('site', 'parent'), 'published')
+        base_fields = (('url', 'title'),('server', 'parent'), 'published')
         fieldsets = (
             (None, {
                 'fields': ('content',)
@@ -98,6 +103,11 @@ class SitesCssAdmin(VersionAdmin):
         return
 
 
-@admin.register(Site)
-class SitesAdmin(admin.ModelAdmin):
+@admin.register(Machine)
+class MachineAdmin(admin.ModelAdmin):
+    inlines = [HttpServerInline]
+
+
+@admin.register(HttpServer)
+class HttpServerAdmin(admin.ModelAdmin):
     pass
