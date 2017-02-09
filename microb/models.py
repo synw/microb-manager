@@ -35,7 +35,7 @@ class Machine(models.Model):
 class HttpServer(models.Model):
     name = models.CharField(_(u'Name'), max_length=200)
     domain = models.CharField(_(u'Domain'), max_length=200)
-    machine = models.ForeignKey(Machine, verbose_name=_(u"Machine"))
+    machine = models.ForeignKey(Machine, verbose_name=_(u"Machine"), related_name="servers")
     port = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name=_(u"Port"))
     
     def __unicode__(self):

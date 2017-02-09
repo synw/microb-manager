@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% include "instant/channels/staff/widget.html" %}
+	{{ server.name }}: hits per second: <span id="num_hits">0</span>  
+{% endblock %}

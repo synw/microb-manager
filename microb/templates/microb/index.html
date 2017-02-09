@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+	{% for machine in machines %}
+		{{ machine.name }}
+		{% for server in machine.servers.all %}
+			<a href="{% url 'microb-server' server.domain %}">{{ server.name }}</a>
+		{% endfor %}
+	{% endfor %}
+{% endblock %}
