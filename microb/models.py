@@ -10,6 +10,7 @@ from jsonfield import JSONField
 from mptt.models import TreeForeignKey, MPTTModel
 from djR.r_producers import R
 from microb.conf import USER_MODEL
+from watchtower.models import HttpServer
 
 
 def content_file_name(instance, filename):
@@ -22,24 +23,6 @@ class Seo(models.Model):
     class Meta:
         abstract = True
         verbose_name=_(u'SEO')
-
-
-class Machine(models.Model):
-    name = models.SlugField(unique=True, verbose_name=_(u'Name'), max_length=200)
-    ip = models.GenericIPAddressField(null=True, blank=True, verbose_name=_(u'Ip adress'))
-    
-    def __unicode__(self):
-        return unicode(self.name)+" - "+str(self.ip)
-
-
-class HttpServer(models.Model):
-    name = models.CharField(_(u'Name'), max_length=200)
-    domain = models.CharField(_(u'Domain'), max_length=200)
-    machine = models.ForeignKey(Machine, verbose_name=_(u"Machine"), related_name="servers")
-    port = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name=_(u"Port"))
-    
-    def __unicode__(self):
-        return unicode(self.name)
    
 
 class SiteTemplate(models.Model):
@@ -121,7 +104,7 @@ class Page(MPTTModel, Seo):
     
     def document_exists(self):
         domain = self.server.domain
-        q = r.db(self.server.domain).table("pages").get_all([self.url, domain], index="key").count()
+        q = r.db(self.server.domain).table("pages").get_all([self.url, domain], index="uri").count()
         #existing_documents = order_documents(R.run_query(q))
         #print modelname+" | "+str(pk)+" _> "+str(existing_documents)
         existing_documents = R.run_query(q)
